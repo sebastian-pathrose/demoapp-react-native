@@ -1,37 +1,52 @@
-name: Pull Request into Master, Develop and Preprod
+name: Beta Distribution
 
 on:
-  pull_request:
+  push:
     branches:
-      - "main"
-      - "Se-text"
+      - main
 
 jobs:
-  #First job
-  install-and-test:
+  beta-distribution:
     runs-on: ubuntu-latest
-
+    name: Beta Distribution
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+    - name: Checkout
+      uses: actions/checkout@v2
+    - uses: actions/setup-node@master
+    - uses: c-hive/gha-yarn-cache@v1
 
-      - name: Use Node.js 14
-        uses: actions/setup-node@v3
-        with:
-          node-version: 14
-          cache: "yarn"
+    - name: Install node modules
+      run: |
+        yarn install
+    - name: Run test
+      run: |
+        yarn test-ci
+    - name: Cache Gradle Wrapper
+      uses: actions/cache@v2
+      with:
+        path: ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-wrapper-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
 
-      - name: Install Node modules
-        run: yarn ci
+    - name: Cache Gradle Dependencies
+      uses: actions/cache@v2
+      with:
+        path: ~/.gradle/caches
+        key: ${{ runner.os }}-gradle-caches-${{ hashFiles('gradle/wrapper/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-caches-
+    - name: Make Gradlew Executable
+      run: cd android && chmod +x ./gradlew
 
-      - name: Linting
-        run: yarn lint
+    - name: Build Android App Bundle
+      run: |
+        cd android && ./gradlew bundleRelease --no-daemon
+    - name: Sign App Bundle
+      id: sign_app
+      uses: r0adkll/sign-android-release@v1
+      with:
+        releaseDirectory: android/app/build/outputs/bundle/release
+        signingKeyBase64: ${{ secrets.ANDROID_SIGNING_KEY }}
+        alias: ${{ secrets.ANDROID_SIGNING_ALIAS }}
+        keyStorePassword: ${{ secrets.ANDROID_SIGNING_STORE_PASSWORD }}
+        keyPassword: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
 
-      - name: Unit & Integration tests
-        run: yarn test:ci
-
-      - name: Jest coverage report
-        uses: ArtiomTr/jest-coverage-report-action@v2.0.6
-        with:
-          coverage-file: ./jest-report.json
-          base-coverage-file: ./jest-report.json
