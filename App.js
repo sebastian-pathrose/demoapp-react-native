@@ -1,15 +1,15 @@
-import React from 'react';
-import {Button, Text, TextInput, View, StyleSheet} from 'react-native';
+import React from 'react'
+import {Button, Text, TextInput, View, StyleSheet} from 'react-native'
 const App = () => {
-  const [message, setMessage] = React.useState();
+  const [message, setMessage] = React.useState()
   return (
     <View>
       <Button
         title="Hello to the tester"
         onPress={() => {
           setTimeout(() => {
-            setMessage('Hello Tester');
-          }, Math.floor(Math.random() * 200));
+            setMessage('Hello Tester')
+          }, Math.floor(Math.random() * 200))
         }}
       />
       {message && (
@@ -18,7 +18,7 @@ const App = () => {
         </Text>
       )}
     </View>
-  );
+  )
 };
 
 const styles = StyleSheet.create({
@@ -28,5 +28,5 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 10,
   },
-});
-export default App;
+})
+export default App
